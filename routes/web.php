@@ -35,6 +35,16 @@ Route::post('single-charge','singleCharge')->name('single-charge');
 
 Route::view('data','data');
 
-Route::post('dashboard', [paypalController::class, 'pay'])->name('payment');
-Route::get('success', [paypalController::class, 'success']);
-Route::get('error', [paypalController::class, 'error']);
+Route::post('dashboard', [paypalController::class, 'createPayment'])->name('paypal');
+Route::get('success', [paypalController::class, 'success'])->name('success');
+Route::get('error', [paypalController::class, 'error'])->name('cancel');
+
+// Route::get('paypal',function(){
+//     return view('myOrder');
+// });
+
+// // route for processing payment
+// Route::post('dashboard', [paypalController::class, 'createPayment'])->name('paypal');
+
+// route for check status of the payment
+// Route::get('status', [paypalController::class, 'getPaymentStatus'])->name('status');

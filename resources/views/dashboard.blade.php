@@ -29,13 +29,15 @@
 <body>
 
 
-    <form action="{{route('payment')}}" method="POST" id="subscribe-form">
+    <form action="{{route('paypal')}}" method="POST" id="subscribe-form">
         @csrf
         <input type="number" name="amount" class="form-control" ><br><br>
         <div class="form-group text-center">
             <button  id="card-button"  class="btn btn-lg btn-success btn-block">SUBMIT</button>
+            
         </div>
     </form>
+    {{-- <div id="paypal-button-container"></div> --}}
 
 
 {{-- stripe payment --}}
@@ -102,6 +104,43 @@
     }
 </script> --}}
 
+{{-- <script src="https://www.paypal.com/sdk/js?client-id=AeGGP9Rpj-cCJAjM-HVMSxY8waR8fyxXDktzvjyy3WqKHIPPkYrRUiY8d8dds-GvnRteUQbrtK58Ji8F"></script>
+<script>
+    paypal.Buttons({
+        onClick() {
+           price = 200
+        },
+
+
+        createOrder: function(data, actions) {
+            return actions.order.create({
+                purchase_units: [{
+                    amount: {
+                        value: price,
+                        currency: 'USD',
+                    }
+                }],
+                application_context: {
+                    shipping_preference: 'NO_SHIPPING'
+                },
+
+            });
+        },
+
+        onApprove: function(data, actions) {
+            return actions.order.capture().then(function(orderData) {
+                var transaction = orderData.purchase_units[0].payments.captures[0];
+                //alert('Transaction '+ transaction.status + ': ' + transaction.id + '');
+
+                
+                
+            });
+        },
+
+
+
+    }).render('#paypal-button-container');
+</script> --}}
 
 </body>
 </html>

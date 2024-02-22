@@ -1,50 +1,68 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Omnipay\Omnipay;
+use PayPal\Api\Amount;
+use PayPal\Api\Payer;
+use PayPal\Api\Payment;
+use PayPal\Api\RedirectUrls;
+use PayPal\Api\Transaction;
+use PayPal\Auth\OAuthTokenCredential;
+use PayPal\Rest\ApiContext;
 
-class PaypalController extends Controller
+class paypalController extends Controller
 {
-    private $gateway;
+    private $apiContext;
 
     public function __construct()
     {
-        $this->gateway = Omnipay::create('PayPal_Rest');
-        $this->gateway->setClientId(env('PAYPAL_CLIENT_ID'));
-        $this->gateway->setSecret(env('PAYPAL_CLIENT_SECRET'));
-        $this->gateway->setTestMode(true);
+        $this->apiContext = new ApiContext(
+            new OAuthTokenCredential(
+                env('PAYPAL_CLIENT_ID'),
+                env('PAYPAL_SECRET')
+            )
+        );
     }
 
-    public function pay(Request $request)
+    public function createPayment(Request $request)
     {
-        try {
-            $response = $this->gateway->purchase([
-                'amount' => $request->amount,
-                'currency' => 'USD',
-                'returnUrl' => url('success'),
-                'cancelUrl' => url('error')
-            ])->send();
+        $payer = new Payer();
+        $payer->setPaymentMethod('paypal');
 
-            if ($response->isRedirect()) {
-                return $response->redirect();
-            } else {
-                return $response->getMessage();
+        
+        $amount = new Amount();
+        $amount->setCurrency('USD')
+        ->setTotal(intval($request->amount)); // Assuming you're receiving the amount from a form or API call
+
+        $transaction = new Transaction();
+        $transaction->setAmount($amount)
+            ->setDescription('Payment description');
+
+        $redirectUrls = new RedirectUrls();
+        $redirectUrls->setReturnUrl(route('success'))
+            ->setCancelUrl(route('cancel'));
+
+        $payment = new Payment();
+        $payment->setIntent('sale')
+            ->setPayer($payer)
+            ->setTransactions([$transaction])
+            ->setRedirectUrls($redirectUrls);
+
+            try {
+                $payment->create($this->apiContext);
+                $approvalLink = $payment->getApprovalLink();
+                
+                // Check if the approval link is a string
+                if (is_string($approvalLink)) {
+                    // Redirect the user to the approval link
+                    return redirect($approvalLink);
+                } else {
+                    // Handle the response accordingly (e.g., display an error message)
+                    return redirect()->back()->withErrors(['message' => 'Invalid approval link.']);
+                }
+            } catch (\Exception $ex) {
+                // Handle error
+                return redirect()->back()->withErrors(['message' => 'Payment creation failed.']);
             }
-        } catch (\Throwable $th) {
-            return $th->getMessage();
-        }
-    }
-
-    public function success()
-    {
-        return 'Payment successful';
-    }
-
-    public function error()
-    {
-        return 'User declined the payment!';
     }
 }
