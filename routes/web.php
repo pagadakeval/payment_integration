@@ -35,7 +35,7 @@ Route::post('single-charge','singleCharge')->name('single-charge');
 
 Route::view('data','data');
 
-Route::post('dashboard', [paypalController::class, 'createPayment'])->name('paypal');
+Route::post('data', [paypalController::class, 'payment'])->name('payment');
 Route::get('success', [paypalController::class, 'success'])->name('success');
 Route::get('error', [paypalController::class, 'error'])->name('cancel');
 

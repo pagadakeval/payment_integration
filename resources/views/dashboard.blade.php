@@ -6,37 +6,67 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Document</title>
     <style>
-        /* .StripeElement {
-        background-color: white;
-        padding: 8px 12px;
-        border-radius: 4px;
-        border: 1px solid transparent;
-        box-shadow: 0 1px 3px 0 #e6ebf1;
-        -webkit-transition: box-shadow 150ms ease;
-        transition: box-shadow 150ms ease;
-    }
-    .StripeElement--focus {
-        box-shadow: 0 1px 3px 0 #cfd7df;
-    }
-    .StripeElement--invalid {
-        border-color: #fa755a;
-    }
-    .StripeElement--webkit-autofill {
-        background-color: #fefde5 !important;
-    } */
-    </style>
+        body {font-family: Arial, Helvetica, sans-serif;}
+        * {box-sizing: border-box;}
+        
+        input[type=text],input[type=number],input[type=email], select, textarea {
+          width: 100%;
+          padding: 12px;
+          border: 1px solid #ccc;
+          border-radius: 4px;
+          box-sizing: border-box;
+          margin-top: 6px;
+          margin-bottom: 16px;
+          resize: vertical;
+        }
+        
+        input[type=submit] {
+          background-color: #04AA6D;
+          color: white;
+          padding: 12px 20px;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+        
+        input[type=submit]:hover {
+          background-color: #45a049;
+        }
+        
+        .container {
+          border-radius: 5px;
+          background-color: #f2f2f2;
+          padding: 20px;
+        }
+        </style>
 </head>
 <body>
 
 
-    <form action="{{route('paypal')}}" method="POST" id="subscribe-form">
-        @csrf
-        <input type="number" name="amount" class="form-control" ><br><br>
-        <div class="form-group text-center">
-            <button  id="card-button"  class="btn btn-lg btn-success btn-block">SUBMIT</button>
+    <body>
+        
+        <div class="container">
+          <form action="{{route('payment')}}">
+            <label for="fname">First Name</label>
+            <input type="text" id="fname" name="fname" class="fname" placeholder="Your name..">
+        
+            <label for="lname">Last Name</label>
+            <input type="text" id="lname" name="lname" class="lname" placeholder="Your last name..">
+        
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="email" placeholder="Your Email..">
+
+            <label for="email">Number</label>
+            <input type="number" id="number" name="number" class="number" placeholder="Your number..">
+
+            <label for="amount">Amount</label>
+            <input type="number" id="amount" name="amount" class="amount" placeholder="">
             
+            <div id="paypal-button-container"></div>
+          </form>
         </div>
-    </form>
+        
+        </body>
     {{-- <div id="paypal-button-container"></div> --}}
 
 
@@ -103,44 +133,59 @@
         form.submit();
     }
 </script> --}}
-
-{{-- <script src="https://www.paypal.com/sdk/js?client-id=AeGGP9Rpj-cCJAjM-HVMSxY8waR8fyxXDktzvjyy3WqKHIPPkYrRUiY8d8dds-GvnRteUQbrtK58Ji8F"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://www.paypal.com/sdk/js?client-id=AeGGP9Rpj-cCJAjM-HVMSxY8waR8fyxXDktzvjyy3WqKHIPPkYrRUiY8d8dds-GvnRteUQbrtK58Ji8F"></script>
 <script>
     paypal.Buttons({
+        
         onClick() {
-           price = 200
+            var amount = $('.amount').val();
         },
 
+            createOrder: function(data, actions) {
+                return actions.order.create({
+                    purchase_units: [{
+                        amount: {
+                            value: amount,
+                            currency: 'USD',
+                        }
+                    }],
+                    application_context: {
+                        shipping_preference: 'NO_SHIPPING'
+                    },
 
-        createOrder: function(data, actions) {
-            return actions.order.create({
-                purchase_units: [{
-                    amount: {
-                        value: price,
-                        currency: 'USD',
-                    }
-                }],
-                application_context: {
-                    shipping_preference: 'NO_SHIPPING'
-                },
+                });
+            },
 
-            });
-        },
+            onApprove: function(data, actions) {
+                return actions.order.capture().then(function(orderData) {
+                    var transaction = orderData.purchase_units[0].payments.captures[0];
+                    //alert('Transaction '+ transaction.status + ': ' + transaction.id + '');
 
-        onApprove: function(data, actions) {
-            return actions.order.capture().then(function(orderData) {
-                var transaction = orderData.purchase_units[0].payments.captures[0];
-                //alert('Transaction '+ transaction.status + ': ' + transaction.id + '');
+                    // var fname = $('.fname').val();
+                    // var lname = $('.lname').val();
+                    // var number = $('.number').val();
+                    // var email = $('.email').val();
+                    // var amount = $('.amount').val();
 
-                
-                
-            });
-        },
-
-
-
-    }).render('#paypal-button-container');
-</script> --}}
-
+                    $.ajax({
+                        url: '/data',
+                        method: 'post',
+                        data: {
+                            // 'amount': amount,
+                            // 'fname': fname,
+                            // 'lname':lname,
+                            // 'number': number,
+                            // 'email': email,
+                            'payment_id': transaction.id
+                        },
+                        success: function(data) {
+                        }
+                    })
+                });
+            },
+        }).render('#paypal-button-container');
+    </script>
+    
 </body>
 </html>
