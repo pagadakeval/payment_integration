@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
   
 use Illuminate\Http\Request;
-use Srmklive\PayPal\Services\ExpressCheckout;
 use App\Models\Payment;
 
 class paypalController extends Controller
@@ -15,8 +14,12 @@ class paypalController extends Controller
     $data->email = $request->email;
     $data->number = $request->number;
     $data->amount = $request->amount;
+    $data->payment_id = $request->payment_id;
+    $data->token = $request->_token;
     $data->save();
+   
+      return response()->json(["message"=>"Payment Successfully"]);
+   //  return redirect()->with(["message"=>"Payment Successfully"]);
 
-    return redirect('data')->with(["message"=>"Payment Successfully"]);
    }
 }

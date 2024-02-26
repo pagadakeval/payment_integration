@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link
+            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+            rel="stylesheet"
+            integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+            crossorigin="anonymous"
+        />
     <title>Document</title>
     <style>
         body {font-family: Arial, Helvetica, sans-serif;}
@@ -44,9 +50,13 @@
 
 
     <body>
+        <div class="alert">
+
+        </div>
         
         <div class="container">
-          <form action="{{route('payment')}}">
+          <form action="{{route('payment')}}" method="post" id="form">
+            @csrf
             <label for="fname">First Name</label>
             <input type="text" id="fname" name="fname" class="fname" placeholder="Your name..">
         
@@ -65,6 +75,7 @@
             <div id="paypal-button-container"></div>
           </form>
         </div>
+        
         
         </body>
     {{-- <div id="paypal-button-container"></div> --}}
@@ -136,50 +147,69 @@
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script src="https://www.paypal.com/sdk/js?client-id=AeGGP9Rpj-cCJAjM-HVMSxY8waR8fyxXDktzvjyy3WqKHIPPkYrRUiY8d8dds-GvnRteUQbrtK58Ji8F"></script>
 <script>
+
     paypal.Buttons({
         
         onClick() {
-            var amount = $('.amount').val();
+            
         },
 
-            createOrder: function(data, actions) {
-                return actions.order.create({
-                    purchase_units: [{
-                        amount: {
-                            value: amount,
-                            currency: 'USD',
-                        }
-                    }],
-                    application_context: {
-                        shipping_preference: 'NO_SHIPPING'
-                    },
+        createOrder: function(data, actions) {
+    var amount = $('.amount').val();
+    if (!amount || isNaN(parseFloat(amount))) {
+        console.error('Invalid amount value');
+        return;
+    }
 
-                });
-            },
+    return actions.order.create({
+        purchase_units: [{
+            amount: {
+                value: parseFloat(amount).toFixed(2),
+                currency: 'USD',
+            }
+        }],
+
+        redirect_urls: {
+        cancel_url: "http://127.0.0.1:8000/dashboard"
+    },
+        application_context: {
+            shipping_preference: 'NO_SHIPPING'
+        }
+    });
+},
+
 
             onApprove: function(data, actions) {
                 return actions.order.capture().then(function(orderData) {
                     var transaction = orderData.purchase_units[0].payments.captures[0];
                     //alert('Transaction '+ transaction.status + ': ' + transaction.id + '');
 
-                    // var fname = $('.fname').val();
-                    // var lname = $('.lname').val();
-                    // var number = $('.number').val();
-                    // var email = $('.email').val();
-                    // var amount = $('.amount').val();
-
+                    var fname = $('.fname').val();
+                    var lname = $('.lname').val();
+                    var number = $('.number').val();
+                    var email = $('.email').val();
+                    var amount = $('.amount').val();
                     $.ajax({
                         url: '/data',
                         method: 'post',
                         data: {
-                            // 'amount': amount,
-                            // 'fname': fname,
-                            // 'lname':lname,
-                            // 'number': number,
-                            // 'email': email,
+                            'amount': amount,
+                            'fname': fname,
+                            'lname':lname,
+                            'number': number,
+                            'email': email,
+                            '_token':'{{ csrf_token() }}',
                             'payment_id': transaction.id
                         },
                         success: function(data) {
+                            if(data.message){
+                                //window.location.href='/dashboard';
+                                $('#form')[0].reset();
+                                $('.alert').text(data.message).addClass('alert-success');
+                                
+                            }
+                             
+           
                         }
                     })
                 });
