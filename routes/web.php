@@ -3,6 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\paypalController;
+use App\Http\Controllers\EventListener;
+use App\Http\Controllers\pusher;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -48,3 +50,12 @@ Route::get('error', [paypalController::class, 'error'])->name('cancel');
 
 // route for check status of the payment
 // Route::get('status', [paypalController::class, 'getPaymentStatus'])->name('status');
+
+
+//send mail using event listener
+Route::get('send',[EventListener::class,'send']);
+
+//pusher
+Route::view('pusher','pusher');
+Route::view('form','pusher_form');
+Route::post('form',[pusher::class,'send'])->name('form');
